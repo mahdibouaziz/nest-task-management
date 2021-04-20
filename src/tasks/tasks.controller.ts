@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -11,7 +12,8 @@ import {
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipe';
-import { Task, TaskStatus } from './task.model';
+import { Task } from './task.entity';
+import { TaskStatus } from './task.status.model';
 import { TasksService } from './tasks.service';
 
 @Controller('tasks')
@@ -19,38 +21,33 @@ export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
-  getTasks(@Query() filterDto: GetTasksFilterDto): Task[] {
-    if (Object.keys(filterDto).length) {
-      return this.tasksService.getTaskWithFilters(filterDto);
-    } else {
-      return this.tasksService.getAllTasks();
-    }
+  async getTasks(@Query() filterDto: GetTasksFilterDto): Promise<Task[]> {
+    return await this.tasksService.getTasks(filterDto);
   }
 
   @Get(':id')
-  getTaskById(@Param('id') id: string): Task {
-    return this.tasksService.getTaskById(id);
+  async getTaskById(@Param('id', ParseIntPipe) id: number): Promise<Task> {
+    return await this.tasksService.getTaskById(id);
   }
 
   @Post()
-  createTask(@Body() createTaskDto: CreateTaskDto): Task {
-    const task = this.tasksService.createTask(createTaskDto);
-    return task;
+  async createTask(@Body() createTaskDto: CreateTaskDto): Promise<Task> {
+    return await this.tasksService.createTask(createTaskDto);
   }
 
   @Delete(':id')
-  deleteTaskById(@Param('id') id: string) {
-    this.tasksService.deleteTaskById(id);
+  async deleteTaskById(@Param('id', ParseIntPipe) id: number) {
+    await this.tasksService.deleteTask(id);
     return {
       message: 'task deleted',
     };
   }
 
   @Patch(':id/status')
-  updateTaskStatus(
-    @Param('id') id: string,
+  async updateTaskStatus(
+    @Param('id', ParseIntPipe) id: number,
     @Body('status', TaskStatusValidationPipe) status: TaskStatus,
-  ): Task {
-    return this.tasksService.updateTaskStatus(id, status);
+  ) {
+    return await this.tasksService.updateTaskStatus(id, status);
   }
 }

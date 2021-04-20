@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
-import { TaskStatus } from '../task.model';
+import { TaskStatus } from '../task.status.model';
 
 @Injectable()
 export class TaskStatusValidationPipe implements PipeTransform {
@@ -10,7 +10,6 @@ export class TaskStatusValidationPipe implements PipeTransform {
   ];
 
   transform(value: string) {
-    //console.log('value', value);
     value = value.toUpperCase();
 
     if (!this.isValidStatus(value)) {
@@ -23,6 +22,7 @@ export class TaskStatusValidationPipe implements PipeTransform {
   }
 
   private isValidStatus(status: string): boolean {
-    return status in this.allowedStatus;
+    const index = this.allowedStatus.findIndex((el) => el === status);
+    return index !== -1;
   }
 }
