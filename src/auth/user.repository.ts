@@ -5,6 +5,8 @@ import {
 import { EntityRepository, Repository } from 'typeorm';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { User } from './user.entity';
+//library to encrypt the password with salt
+import * as bcrypt from 'bcrypt';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -13,15 +15,23 @@ export class UserRepository extends Repository<User> {
     const { username, password } = authCredentialsDto;
 
     //check if the username exists in the database
-
     //meth1 but this method do 2 queries
     /* const find = await this.find({ username });
     if (find.length > 0) {
       throw new ConflictException('username already Exists');
     } */
 
+    //generate the salt
+    const salt = await bcrypt.genSalt();
+    //console.log(salt);
+
     //Create a new user
-    const user = this.create({ username, password });
+    const user = this.create({
+      username,
+      salt, //store the salt
+      password: await this.hashPassword(password, salt), //store the hashed password
+    });
+    //console.log(user.password);
 
     //meth2 with only one query
     try {
@@ -36,5 +46,9 @@ export class UserRepository extends Repository<User> {
         throw new InternalServerErrorException();
       }
     }
+  }
+
+  private async hashPassword(password: string, salt: string): Promise<string> {
+    return await bcrypt.hash(password, salt);
   }
 }

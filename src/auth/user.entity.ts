@@ -16,4 +16,9 @@ export class User {
     type: 'varchar',
   })
   password: string;
+
+  @Column({
+    type: 'varchar',
+  })
+  salt: string;
 }
