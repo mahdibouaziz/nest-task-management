@@ -1,6 +1,7 @@
 import {
   ConflictException,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { EntityRepository, Repository } from 'typeorm';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
@@ -46,6 +47,30 @@ export class UserRepository extends Repository<User> {
         throw new InternalServerErrorException();
       }
     }
+  }
+
+  async validateUserPassword(
+    authCredentialsDto: AuthCredentialsDto,
+  ): Promise<string> {
+    //get the credentials
+    const { username, password } = authCredentialsDto;
+
+    //retrive the user from the database
+    const user = await this.findOne({ username });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid Username');
+    }
+
+    //hash the password with the same salt
+    const hashedPassword = await this.hashPassword(password, user.salt);
+
+    //check if the password is incorrect
+    if (hashedPassword !== user.password) {
+      throw new UnauthorizedException('Invalid password');
+    }
+
+    return user.username;
   }
 
   private async hashPassword(password: string, salt: string): Promise<string> {
