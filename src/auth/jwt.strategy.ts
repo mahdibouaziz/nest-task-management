@@ -26,7 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   */
 
   //the return fo this method is gonna be injected in the request
-  async validate(payload: JwtPayload): Promise<User> {
+  async validate(payload: JwtPayload) {
     const { username } = payload;
     const user = await this.userRepository.findOne({ username });
 
@@ -34,6 +34,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    return user;
+    return {
+      username: user.username,
+      id: user.id,
+    };
   }
 }
