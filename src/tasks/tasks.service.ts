@@ -43,12 +43,20 @@ export class TasksService {
     return tasks;
   }
 
-  async getTaskById(id: number): Promise<Task> {
-    const task = await this.taskRepository.findOne(id);
-    //check if the id exists
+  async getTaskById(id: number, user: User): Promise<Task> {
+    //const task = await this.taskRepository.findOne(id);
+
+    const task = await this.taskRepository
+      .createQueryBuilder('task')
+      .where('task.id = :id', { id })
+      .andWhere('task.user = :userId', { userId: user.id })
+      .getOne();
+
+    //check if the id of the task exists
     if (!task) {
       throw new NotFoundException(`task with id=${id} Does not exists`);
     }
+
     return task;
   }
 
@@ -60,22 +68,31 @@ export class TasksService {
     return task;
   }
 
-  async deleteTask(id: number): Promise<void> {
+  async deleteTask(id: number, user: User): Promise<any> {
     //meth1 with remove
     /* const task = await this.getTaskById(id);
     await this.taskRepository.remove(task); */
 
     //meth2 with delete (better performance)
-    const result = await this.taskRepository.delete(id);
+    const result = await this.taskRepository.delete({ id, userId: user.id });
     if (result.affected === 0) {
       throw new NotFoundException(`task with id=${id} Does not exists`);
     }
+    return { message: 'Task Deleted' };
   }
 
-  async updateTaskStatus(id: number, status: TaskStatus): Promise<void> {
-    const result = await this.taskRepository.update(id, { status });
+  async updateTaskStatus(
+    id: number,
+    status: TaskStatus,
+    user: User,
+  ): Promise<any> {
+    const result = await this.taskRepository.update(
+      { id, userId: user.id },
+      { status },
+    );
     if (result.affected === 0) {
       throw new NotFoundException(`task with id=${id} Does not exists`);
     }
+    return { message: 'Task updated' };
   }
 }
