@@ -14,14 +14,16 @@ export class TasksService {
     private taskRepository: TaskRepository,
   ) {}
 
-  async getTasks(filterDto: GetTasksFilterDto): Promise<Task[]> {
+  async getTasks(filterDto: GetTasksFilterDto, user: User): Promise<Task[]> {
     //extracting criteria variables
     const { search, status } = filterDto;
 
     //create a query builder for the entity Task <=> the table taskmanagement
     //the argument task is just an alias
     //this query gonna get all the table
-    const query = this.taskRepository.createQueryBuilder('task');
+    const query = this.taskRepository
+      .createQueryBuilder('task')
+      .where('task.user = :userId', { userId: user.id }); //get tasks for only the owned user who's sending the request
     //console.log(query.getSql());
 
     //build the query
