@@ -11,6 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/auth/get-user.decorator';
+import { User } from 'src/auth/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipe';
@@ -24,23 +26,35 @@ export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
-  async getTasks(@Query() filterDto: GetTasksFilterDto): Promise<Task[]> {
-    return await this.tasksService.getTasks(filterDto);
+  async getTasks(
+    @Query() filterDto: GetTasksFilterDto,
+    @GetUser() user: User,
+  ): Promise<Task[]> {
+    return await this.tasksService.getTasks(filterDto, user);
   }
 
   @Get(':id')
-  async getTaskById(@Param('id', ParseIntPipe) id: number): Promise<Task> {
-    return await this.tasksService.getTaskById(id);
+  async getTaskById(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() user: User,
+  ): Promise<Task> {
+    return await this.tasksService.getTaskById(id, user);
   }
 
   @Post()
-  async createTask(@Body() createTaskDto: CreateTaskDto): Promise<Task> {
-    return await this.tasksService.createTask(createTaskDto);
+  async createTask(
+    @Body() createTaskDto: CreateTaskDto,
+    @GetUser() user: User,
+  ): Promise<Task> {
+    return await this.tasksService.createTask(createTaskDto, user);
   }
 
   @Delete(':id')
-  async deleteTaskById(@Param('id', ParseIntPipe) id: number) {
-    await this.tasksService.deleteTask(id);
+  async deleteTaskById(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() user: User,
+  ) {
+    await this.tasksService.deleteTask(id, user);
     return {
       message: 'task deleted',
     };
@@ -50,7 +64,8 @@ export class TasksController {
   async updateTaskStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body('status', TaskStatusValidationPipe) status: TaskStatus,
+    @GetUser() user: User,
   ) {
-    return await this.tasksService.updateTaskStatus(id, status);
+    return await this.tasksService.updateTaskStatus(id, status, user);
   }
 }
